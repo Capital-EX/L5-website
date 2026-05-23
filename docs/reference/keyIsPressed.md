@@ -1,4 +1,4 @@
-# keyIsPressed()
+# keyIsPressed
  
 A boolean variable that's `true` if any key is currently pressed and `false` if not.
 

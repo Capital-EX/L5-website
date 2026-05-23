@@ -233,7 +233,7 @@ An offline version of this documentation is available for [download](/download/#
 
 * [key](key.md)
 * [keyIsDown()](keyIsDown.md)
-* [keyIsPressed()](keyIsPressed.md)
+* [keyIsPressed](keyIsPressed.md)
 * [keyPressed()](keyPressed.md)
 * [keyReleased()](keyReleased.md)
 * [keyTyped()](keyTyped.md)
