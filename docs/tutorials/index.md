@@ -21,4 +21,4 @@
 - [Data Structure Garden](data-structure-garden.md) - Another tutorial on how to use objects and arrays
 - [Video](video.md) - An intro to video formats, and loading and playing videos with L5
 
-_Have an idea for a tutorial you'd like to see? Or have one to contribute? L5 is new and could use some help building out its tutorials. Check out [Contributing](/contributing) for more information on writing and submitting your own._
+*Have an idea for a tutorial you'd like to see? Or have one to contribute? L5 is new and could use some help building out its tutorials. Check out [Contributing](/contributing) for more information on writing and submitting your own.*

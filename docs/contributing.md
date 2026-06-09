@@ -11,7 +11,7 @@ Thanks for your interest in contributing to **L5**! Contributions of all kinds a
 
 We are inspired by the **[all contributors](https://github.com/all-contributors/all-contributors.github.io)** approach to contribution to open source projects:
 
-> Our community values contributions of all forms and seeks to expand the meaning of the word contributor as far and wide as possible. It includes documentation, teaching, writing code, making art, writing, design, activism, organizing, curating, or anything else you might imagine. --_from [p5.js Contributor Guidelines](https://p5js.org/contribute/contributor_guidelines/)_
+> Our community values contributions of all forms and seeks to expand the meaning of the word contributor as far and wide as possible. It includes documentation, teaching, writing code, making art, writing, design, activism, organizing, curating, or anything else you might imagine. -- *from [p5.js Contributor Guidelines](https://p5js.org/contribute/contributor_guidelines/)*
 
 If you’re new to open source, don’t worry. This guide explains **which repository to use**, **when to fork**, and **how to get started** step by step.
 

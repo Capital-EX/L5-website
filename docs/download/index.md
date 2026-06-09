@@ -2,11 +2,11 @@
 
 L5 is free open source software available for Linux, Mac, Windows, Android and iOS.
 
-L5 programs run using LÖVE (also called Love2d), a free, open-source framework. Love2D is a game framework, just like Gadot, Unity, or Unreal. You will use Love2D to run your L5 scripts. This is similar to using a browser to run HTML code.
+L5 programs run using LÖVE (also called Love2d), a free, open-source framework. Love2d is a game framework, just like Godot, Unity, or Unreal. You will use Love2d to run your L5 scripts. This is similar to using a browser to run HTML code.
 
 Covered by this download tutorial:
 
-- Download and Install Love2D
+- Download and Install Love2d
 - Download and Open L5 Starter Folder
 
 **Step-by-step install guides:**

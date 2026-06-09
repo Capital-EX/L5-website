@@ -6,15 +6,15 @@ L5 is a fun, fast, cross-platform, and lightweight implementation of the **[Proc
 
 > Processing is not a single programming language, but an arts-centric system for learning, teaching, and making visual form with code. **-[Processing.py reference](https://py.processing.org/reference/)**
 
-L5 brings the familiar Processing creative coding environment to Lua, offering some of the best aspects of both Processing and p5.js with some twists of its own. But you don't need to know Processing already to get started with L5. L5 is built on top of the Love2D framework, and offers near-instant loading times and excellent performance. **L5 is not an official implementation of Processing or the Processing Foundation. It is a community-created project.**
+L5 brings the familiar Processing creative coding environment to Lua, offering some of the best aspects of both Processing and p5.js with some twists of its own. But you don't need to know Processing already to get started with L5. L5 is built on top of the Love2d framework, and offers near-instant loading times and excellent performance. **L5 is not an official implementation of Processing or the Processing Foundation. It is a community-created project.**
 
 Beyond running fast on modern machines, L5 is optimized for older and lower-powered devices, minimizing resource usage to keep creative coding accessible to everyone. This helps with our goal of building resilient, long-lasting software projects. L5 is built in Lua, a robust but lightweight, long-running, lightning-fast, extensible language, that works on desktop, phone, and tablet.
 
-_L5 aims to make creative coding accessible, fast, and fun while leveraging the power and simplicity of Lua and a commitment to making resilient, long-lasting tools._
+*L5 aims to make creative coding accessible, fast, and fun while leveraging the power and simplicity of Lua and a commitment to making resilient, long-lasting tools.*
 
 ## How L5 Works
 
-L5 is a Lua library. Your L5 code runs inside **[Love2D](https://www.love2d.org/)**, a free open-source game framework. Think of Love2D as the engine and L5 as the creative coding toolkit on top. You download both: Love2D to run programs, and L5 to write them using a Processing-style API.
+L5 is a Lua library. Your L5 code runs inside **[Love2d](https://www.love2d.org/)**, a free open-source game framework. Think of Love2d as the engine and L5 as the creative coding toolkit on top. You download both: Love2d to run programs, and L5 to write them using a Processing-style API.
 
 ## Example sketch
 
@@ -53,7 +53,7 @@ Where Java undergoes regular major updates and JavaScript is a fast-evolving and
 
 - **Lightning fast**: Scripts, images, and audio load near-instantly
 - **Easy syntax**: Easy to learn and consistent syntax.
-- **Minimal footprint**: L5 (~6MB, from Love2D ~4.5MB + LuaJIT ~1.5MB) vs Processing (~500MB) vs p5.js (~1-4MB + browser ~250-355MB)
+- **Minimal footprint**: L5 (~6MB, from Love2d ~4.5MB + LuaJIT ~1.5MB) vs Processing (~500MB) vs p5.js (~1-4MB + browser ~250-355MB)
 - **Lighter impact**: Runs on older hardware and devices.
 - **Cross-platform**: Runs on Windows, macOS, Linux, iOS, Android, Raspberry Pi
 - **Synchronous execution**: Code runs in predictable order, no async complexity
@@ -69,15 +69,15 @@ Where Java undergoes regular major updates and JavaScript is a fast-evolving and
 
 ## Get Involved
 
-**_Ready to try L5?_**  
+***Ready to try L5?***  
 Continue to the **[download](download/index.md)** page for an installation guide and the **[tutorials](tutorials/index.md)** for easy ways to get started.
 
-**_Want to contribute?_**  
+***Want to contribute?***  
 While L5 is a new project with growing documentation, it benefits from:
 
 - The welcoming Processing community and their decade+ of resources
 - Extensive Processing tutorials, books, and forums that translate well to L5
-- The stable Lua and Love2D ecosystems
+- The stable Lua and Love2d ecosystems
 - Active development and community contributions
 
 Note: As L5 is new, documentation and examples are still growing compared to the mature Processing ecosystem.
