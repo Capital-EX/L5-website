@@ -1,5 +1,5 @@
--- L5 0.1.5 (c) Lee Tusman and Contributors GNU LGPL2.1
-VERSION = '0.1.5'
+-- L5 0.1.7 (c) Lee Tusman and Contributors GNU LGPL2.1
+VERSION = '0.1.7'
 
 -- Override love.run() - adds double buffering and custom events
 function love.run()
@@ -112,6 +112,9 @@ function love.run()
         
         -- Restore color (after drawing the canvas)
         love.graphics.setColor(r, g, b, a)
+
+        drawPrintBuffer()
+
         love.graphics.present()
       end
     
@@ -257,50 +260,7 @@ function love.draw()
     love.graphics.pop()
   end
 
-  -- Draw print buffer on top of window, if on
-  if L5_env.showPrintBuffer and #L5_env.printBuffer > 0 then
-    love.graphics.push()
-    love.graphics.origin()
-
-    -- Save user's current font and switch to default
-    local userFont = love.graphics.getFont()
-    love.graphics.setFont(L5_env.printFont or L5_env.defaultFont)
-    
-    -- Calculate max lines that fit on screen
-    local maxLines = math.floor((height - 10) / L5_env.printLineHeight)
-    
-    -- Trim buffer to only show lines that fit
-    local displayBuffer = {}
-    local startIdx = math.max(1, #L5_env.printBuffer - maxLines + 1)
-    for i = startIdx, #L5_env.printBuffer do
-        table.insert(displayBuffer, L5_env.printBuffer[i])
-    end
-    
-    -- Get the font to measure text width
-    local font = love.graphics.getFont()
-    
-    -- Draw each line with its own background
-    local y = 5
-    for _, line in ipairs(displayBuffer) do
-        -- Measure the actual width of this line of text
-        local textWidth = font:getWidth(line)
-        
-        -- Draw background rectangle just for this line
-        love.graphics.setColor(0, 0, 0, 0.7)
-        love.graphics.rectangle('fill', 3, y, textWidth + 6, L5_env.printLineHeight)
-        
-        -- Draw the text on top
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print(line, 5, y)
-        
-        y = y + L5_env.printLineHeight
-    end
-
-    -- Restore user's font
-    love.graphics.setFont(userFont)
-    
-    love.graphics.pop()
-  end
+  
 end
 
 function love.mousepressed(_x, _y, button, istouch, presses)
@@ -395,6 +355,51 @@ function love.focus(_focused)
 end
 
 ------------------- CUSTOM FUNCTIONS -----------------
+function drawPrintBuffer()
+    if not L5_env.showPrintBuffer or #L5_env.printBuffer == 0 then
+        return
+    end
+    
+    love.graphics.push()
+    love.graphics.origin()
+    
+    -- Save user's current state
+    local userFont = love.graphics.getFont()
+    local pr, pg, pb, pa = love.graphics.getColor()
+    
+    love.graphics.setFont(L5_env.printFont or L5_env.defaultFont)
+    
+    -- Calculate max lines that fit on screen
+    local maxLines = math.floor((height - 10) / L5_env.printLineHeight)
+    
+    -- Trim buffer to only show lines that fit
+    local displayBuffer = {}
+    local startIdx = math.max(1, #L5_env.printBuffer - maxLines + 1)
+    for i = startIdx, #L5_env.printBuffer do
+        table.insert(displayBuffer, L5_env.printBuffer[i])
+    end
+    
+    -- Get the font to measure text width
+    local font = love.graphics.getFont()
+    
+    -- Draw each line with its own background
+    local y = 5
+    for _, line in ipairs(displayBuffer) do
+        local textWidth = font:getWidth(line)
+        love.graphics.setColor(0, 0, 0, 0.7)
+        love.graphics.rectangle('fill', 5, y, textWidth + 4, L5_env.printLineHeight)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print(line, 5, y)
+        y = y + L5_env.printLineHeight
+    end
+    
+    -- Restore user's state
+    love.graphics.setFont(userFont)
+    love.graphics.setColor(pr, pg, pb, pa)
+    
+    love.graphics.pop()
+end
+
 function printToScreen(textSize)
   L5_env.showPrintBuffer = true
 
@@ -406,6 +411,8 @@ function printToScreen(textSize)
 end
 
 function size(_w, _h)
+  -- do nothing if the window size hasn't changed
+  if _w == width and _h == height then return end
   -- must clear canvas before setMode
   love.graphics.setCanvas()
 
@@ -762,6 +769,7 @@ function defaults()
   MITER = "miter"
   BEVEL = "bevel"
   NONE = "none"
+  CLOSE = "close"
   -- typography
   LEFT = "left"
   RIGHT = "right"
@@ -818,6 +826,12 @@ function defaults()
   SIZEALL = "sizeall"
   NO = "no"
   HAND = "hand"
+  -- beginShape kinds
+  POINTS = "points"
+  LINES = "lines"
+  TRIANGLES = "triangles"
+  TRIANGLE_FAN = "fan"
+  TRIANGLE_STRIP = "strip"
 
   -- global user vars - can be read by user but shouldn't be altered by user
   key = "" --default, overriden with key presses detected in love.update(dt)
@@ -887,6 +901,12 @@ function define_env_globals()
   L5_env.pixelsLoaded = false
   -- custom shape drawing 
   L5_env.vertices = {}
+  L5_env.kind = nil
+  L5_env.shapeKinds = {[POINTS] = true, [LINES] = true, [TRIANGLES]=true, [TRIANGLE_FAN]=true, [TRIANGLE_STRIP]=true}
+  L5_env.mesh = love.graphics.newMesh(
+    {{"VertexPosition", "float", 2}},
+    4096, "triangles", "dynamic"
+  ) -- reusable mesh for non-texture shapes
   -- custom texture mesh
   L5_env.currentTexture = nil
   L5_env.useTexture = false
@@ -1234,14 +1254,52 @@ end
 
 ---------------------- TRANSFORM ---------------------
 
+-- style stack for push()/pop() — tracks L5_env fields not covered by love.graphics.push/pop
+local STYLE_KEYS = {
+  "fill_mode",
+  "stroke_color",
+  "currentTint",
+  "image_mode",
+  "rect_mode",
+  "ellipse_mode",
+  "color_mode",
+  "color_max",
+  "textAlignX",
+  "textAlignY",
+  "currentFontPath",
+  "currentFontSize",
+  "currentFont"
+}
+
+local function copyStyle(t)
+  local out = {}
+  for k, v in pairs(t) do
+    out[k] = v
+  end
+  return out
+end
+
+local styleStack = {}
+
 function push()
-  love.graphics.push()
+  love.graphics.push('all')
+  local snapshot = {}
+  for _, k in ipairs(STYLE_KEYS) do
+    local v = L5_env[k]
+    snapshot[k] = (type(v) == "table") and copyStyle(v) or v
+  end
+  table.insert(styleStack, snapshot)
 end
 
 function pop()
-  love.graphics.pop()
+  love.graphics.pop('all')
+  local snapshot = table.remove(styleStack)
+  if snapshot then
+    for k, v in pairs(snapshot) do
+      L5_env[k] = v
+    end
+  end
 end
-
 function translate(_x,_y)
   love.graphics.translate(_x,_y )
 end
@@ -2295,10 +2353,27 @@ function textureWrap(_mode)
     end
 end
 
-function beginShape()
+function beginShape(...)
+
+  local n = select('#' , ...)
+  if(n > 1) then
+     error("beginShape(kind) accepts at most one argument", 2)
+  end
+
+  local _kind = select(1, ...)
+
+  if n == 0 then
+    _kind = nil
+  elseif _kind == nil then
+    error("This kind is not defined (undefined variable passed)")
+  elseif not L5_env.shapeKinds[_kind] then -- if any other type is passed
+    error("Invalid kind: " .. tostring(_kind))
+  end
+
   -- reset custom shape vertices table
   L5_env.vertices = {}
   L5_env.useTexture = false
+  L5_env.kind = _kind
 end
 
 function vertex(_x, _y, _u, _v)
@@ -2318,27 +2393,166 @@ function vertex(_x, _y, _u, _v)
     end
 end
 
-function endShape()
-    -- draw the custom shape
-    if #L5_env.vertices > 0 then
-      if L5_env.useTexture and L5_env.currentTexture then
-	-- Use mesh for textured polygon
-	local mesh = love.graphics.newMesh(L5_env.vertices, "fan")
-	mesh:setTexture(L5_env.currentTexture)
+function endShape(_close)
+  -- no vertices, early exit
+  if #L5_env.vertices == 0 then return end
 
-        -- Apply texture wrap mode
-            L5_env.currentTexture:setWrap(L5_env.textureWrap, L5_env.textureWrap)
-
-	love.graphics.draw(mesh)
-      else
-        -- Use regular polygon for non-textured shapes
-        love.graphics.polygon("fill", L5_env.vertices)
-	local r, g, b, a = love.graphics.getColor()
-	love.graphics.setColor(unpack(L5_env.stroke_color))
-        love.graphics.polygon("line", L5_env.vertices)
-	love.graphics.setColor(r, g, b, a)
+  -- helper function to convert flat {x,y,x,y...} to {{x,y},{x,y}...}
+  local function toVertTable(verts)
+    if type(verts[1]) == "number" then
+      local converted = {}
+      for i = 1, #verts, 2 do
+        converted[#converted+1] = {verts[i], verts[i+1]}
       end
+      return converted
     end
+    return verts
+  end
+
+  -- draw points
+  if L5_env.kind == POINTS then
+    local r, g, b, a = love.graphics.getColor()
+    love.graphics.setColor(unpack(L5_env.stroke_color))
+    for i = 1, #L5_env.vertices, 2 do
+      love.graphics.points(L5_env.vertices[i], L5_env.vertices[i+1])
+    end
+    love.graphics.setColor(r, g, b, a)
+
+  -- draw unconnected lines
+  elseif L5_env.kind == LINES then
+    local r, g, b, a = love.graphics.getColor()
+    love.graphics.setColor(unpack(L5_env.stroke_color))
+    for i = 1, #L5_env.vertices - 2, 4 do
+      love.graphics.line(
+        L5_env.vertices[i], L5_env.vertices[i+1],
+        L5_env.vertices[i+2], L5_env.vertices[i+3]
+      )
+    end
+    love.graphics.setColor(r, g, b, a)
+
+  -- draw separated triangles
+  elseif L5_env.kind == TRIANGLES then
+    local verts = toVertTable(L5_env.vertices)
+    if L5_env.useTexture and L5_env.currentTexture then
+      local mesh = love.graphics.newMesh(verts, TRIANGLES)
+      mesh:setTexture(L5_env.currentTexture)
+      L5_env.currentTexture:setWrap(L5_env.textureWrap, L5_env.textureWrap)
+      love.graphics.draw(mesh)
+    else
+      if L5_env.fill_mode == "fill" then
+        L5_env.mesh:setVertices(verts, 1, #verts)
+        L5_env.mesh:setDrawMode("triangles")
+        L5_env.mesh:setDrawRange(1, #verts)
+        love.graphics.draw(L5_env.mesh)
+      end
+      local r, g, b, a = love.graphics.getColor()
+      love.graphics.setColor(unpack(L5_env.stroke_color))
+      for i = 1, #verts, 3 do
+        local v1, v2, v3 = verts[i], verts[i+1], verts[i+2]
+        if v1 == nil or v2 == nil or v3 == nil then break end
+        love.graphics.line(v1[1],v1[2], v2[1],v2[2])
+        love.graphics.line(v2[1],v2[2], v3[1],v3[2])
+        love.graphics.line(v3[1],v3[2], v1[1],v1[2])
+      end
+      love.graphics.setColor(r, g, b, a)
+    end
+
+  -- draw triangle strip
+  elseif L5_env.kind == TRIANGLE_STRIP then
+    local verts = toVertTable(L5_env.vertices)
+    if L5_env.useTexture and L5_env.currentTexture then
+      local mesh = love.graphics.newMesh(verts, TRIANGLE_STRIP)
+      mesh:setTexture(L5_env.currentTexture)
+      L5_env.currentTexture:setWrap(L5_env.textureWrap, L5_env.textureWrap)
+      love.graphics.draw(mesh)
+    else
+      if L5_env.fill_mode == "fill" then
+        L5_env.mesh:setVertices(verts, 1, #verts)
+        L5_env.mesh:setDrawMode("strip")
+        L5_env.mesh:setDrawRange(1, #verts)
+        love.graphics.draw(L5_env.mesh)
+      end
+      local r, g, b, a = love.graphics.getColor()
+      love.graphics.setColor(unpack(L5_env.stroke_color))
+      for i = 1, #verts-2 do
+        local v1, v2, v3 = verts[i], verts[i+1], verts[i+2]
+        if v1 == nil or v2 == nil or v3 == nil then break end
+        love.graphics.line(v1[1],v1[2], v2[1],v2[2])
+        love.graphics.line(v2[1],v2[2], v3[1],v3[2])
+        love.graphics.line(v3[1],v3[2], v1[1],v1[2])
+      end
+      love.graphics.setColor(r, g, b, a)
+    end
+
+  -- draw triangles centered around the first vertex
+  elseif L5_env.kind == TRIANGLE_FAN then
+    local verts = toVertTable(L5_env.vertices)
+    if L5_env.useTexture and L5_env.currentTexture then
+      local mesh = love.graphics.newMesh(verts, TRIANGLE_FAN)
+      mesh:setTexture(L5_env.currentTexture)
+      L5_env.currentTexture:setWrap(L5_env.textureWrap, L5_env.textureWrap)
+      love.graphics.draw(mesh)
+    else
+      if L5_env.fill_mode == "fill" then
+        L5_env.mesh:setVertices(verts, 1, #verts)
+        L5_env.mesh:setDrawMode("fan")
+        L5_env.mesh:setDrawRange(1, #verts)
+        love.graphics.draw(L5_env.mesh)
+      end
+      local r, g, b, a = love.graphics.getColor()
+      love.graphics.setColor(unpack(L5_env.stroke_color))
+      for i = 2, #verts-1 do
+        local v1, v2, v3 = verts[1], verts[i], verts[i+1]
+        if v1 == nil or v2 == nil or v3 == nil then break end
+        love.graphics.line(v1[1],v1[2], v2[1],v2[2])
+        love.graphics.line(v2[1],v2[2], v3[1],v3[2])
+        love.graphics.line(v3[1],v3[2], v1[1],v1[2])
+      end
+      love.graphics.setColor(r, g, b, a)
+    end
+
+  -- polygon fallback (kind == nil) 
+  -- if texture() triangulate fan mesh - convex assumed
+  else
+    if L5_env.useTexture and L5_env.currentTexture then
+      local mesh = love.graphics.newMesh(L5_env.vertices, "fan")
+      mesh:setTexture(L5_env.currentTexture)
+      L5_env.currentTexture:setWrap(L5_env.textureWrap, L5_env.textureWrap)
+      love.graphics.draw(mesh)
+    else
+      -- triangulate handles concave shapes but errors on self-intersecting polygons
+      if L5_env.fill_mode == "fill" then
+        local ok, triangles = pcall(love.math.triangulate, L5_env.vertices)
+        if ok then
+          local meshVerts = {}
+          for _, tri in ipairs(triangles) do
+            for i = 1, 6, 2 do
+              meshVerts[#meshVerts+1] = {tri[i], tri[i+1]}
+            end
+          end
+          L5_env.mesh:setVertices(meshVerts, 1, #meshVerts)
+          L5_env.mesh:setDrawMode("triangles")
+          L5_env.mesh:setDrawRange(1, #meshVerts)
+          love.graphics.draw(L5_env.mesh)
+        else
+          love.graphics.polygon("fill", L5_env.vertices)
+        end
+      end
+      local r, g, b, a = love.graphics.getColor()
+      love.graphics.setColor(unpack(L5_env.stroke_color))
+      if _close == CLOSE then
+        local verts = L5_env.vertices
+        -- draw all segments
+        love.graphics.line(verts[1], verts[2], unpack(verts, 3, #verts))
+        -- close by drawing back to start
+        love.graphics.line(verts[#verts-1], verts[#verts], verts[1], verts[2])
+      else
+        -- continuous lines, doesn't close the last two segments aka OPEN
+        love.graphics.line(L5_env.vertices)
+      end
+      love.graphics.setColor(r, g, b, a)
+    end
+  end
 end
 
 function bezier(x1,y1,x2,y2,x3,y3,x4,y4)
@@ -3083,20 +3297,20 @@ function text(_msg,_x,_y,_w)
       local currentLine = ""
       local lineWidth = 0
       
+      local buffer = {}
       for i = 1, #_msg do
-        local char = _msg:sub(i, i)
-        local charWidth = font:getWidth(char)
-        
-        if lineWidth + charWidth > _w then
-          wrappedText = wrappedText .. currentLine .. "\n"
-          currentLine = char
-          lineWidth = charWidth
-        else
-          currentLine = currentLine .. char
-          lineWidth = lineWidth + charWidth
-        end
+	local char = _msg:sub(i, i)
+	local charWidth = font:getWidth(char)
+	if lineWidth + charWidth > _w then
+	  table.insert(buffer, "\n")
+	  table.insert(buffer, char)
+	  lineWidth = charWidth
+	else
+	  table.insert(buffer, char)
+	  lineWidth = lineWidth + charWidth
+	end
       end
-      wrappedText = wrappedText .. currentLine
+      wrappedText = table.concat(buffer)
       
       love.graphics.printf(wrappedText, _x - x_offset, _y - y_offset, _w, L5_env.textAlignX)
     else
@@ -3134,6 +3348,7 @@ function textWrap(_style)
   end
 end
 
+----------------------- IMAGE ------------------------
 ---------------- LOADING & DISPLAYING ----------------
 
 function loadImage(_filename)
@@ -3259,6 +3474,68 @@ function image(_img,_x,_y,_w,_h)
   end
   
   love.graphics.draw(_img,_x,_y,0,xscale,yscale,ox,oy)
+end
+
+function mask(img, maskImage)
+  -- save current graphics state
+  local prevCanvas = love.graphics.getCanvas()
+  local prevBlendMode = love.graphics.getBlendMode()
+  
+  -- get ImageData by rendering to temporary canvas
+  local w = img:getWidth()
+  local h = img:getHeight()
+  
+  -- create temporary canvas for img
+  local imgCanvas = love.graphics.newCanvas(w, h)
+  love.graphics.setCanvas(imgCanvas)
+  love.graphics.clear()
+  love.graphics.draw(img, 0, 0)
+  love.graphics.setCanvas()
+  local imgData = imgCanvas:newImageData()
+  imgCanvas:release()
+  
+  -- create temporary canvas for mask
+  local maskW = maskImage:getWidth()
+  local maskH = maskImage:getHeight()
+  local maskCanvas = love.graphics.newCanvas(maskW, maskH)
+  love.graphics.setCanvas(maskCanvas)
+  love.graphics.clear()
+  love.graphics.draw(maskImage, 0, 0)
+  love.graphics.setCanvas()
+  local maskData = maskCanvas:newImageData()
+  maskCanvas:release()
+  
+  -- scale mask if needed
+  if w ~= maskW or h ~= maskH then
+    local scaledMaskData = love.image.newImageData(w, h)
+    for y = 0, h - 1 do
+      for x = 0, w - 1 do
+        local mx = floor(x * maskW / w)
+        local my = floor(y * maskH / h)
+        local mr, mg, mb, ma = maskData:getPixel(mx, my)
+        scaledMaskData:setPixel(x, y, mr, mg, mb, ma)
+      end
+    end
+    maskData = scaledMaskData
+  end
+  
+  -- apply mask using mask's alpha channel
+  for y = 0, h - 1 do
+    for x = 0, w - 1 do
+      local r, g, b, a = imgData:getPixel(x, y)
+      local mr, mg, mb, ma = maskData:getPixel(x, y)
+      
+      -- multiply alpha (cumulative)
+      imgData:setPixel(x, y, r, g, b, a * ma)
+    end
+  end
+  
+  -- update the image
+  img:replacePixels(imgData)
+  
+  -- restore graphics state
+  love.graphics.setCanvas(prevCanvas)
+  love.graphics.setBlendMode(prevBlendMode)
 end
 
 function tint(...)
