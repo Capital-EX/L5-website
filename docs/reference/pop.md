@@ -1,17 +1,8 @@
 # pop()
 
-Ends a drawing group that contains its own transformations.
+Ends a drawing group that contains its own style and transformations.
 
-**Note that L5's push() and pop() work differently than p5.js and Processing. In L5, push() and pop() only save and restore the transformation matrix state but not the style effects.**
-
-[push()](push.md) and `pop` contain the effects of the following functions:
-
-* translate()
-* rotate()
-* scale()
-* applyMatrix()
-
-By default, transformations such as [rotate()](rotate.md) are applied to all drawing that follows. The [push()](push.md) and `pop()` functions can limit the effect of transformations to a specific group of shapes, images, and text. For example, a group of shapes could be translated to follow the mouse without affecting the rest of the sketch:
+By default, styles such as [fill()](fill.md) and transformations such as [rotate()](rotate.md) are applied to all drawing that follows. The [push()](push.md) and `pop()` functions can limit the effect of styles and transformations to a specific group of shapes, images, and text. For example, a group of shapes could be translated to follow the mouse without affecting the rest of the sketch:
 
 ```lua
 -- Begin the drawing group.
@@ -46,11 +37,11 @@ fill(0)
 text('X', x, y)
 ```
 
-In the code snippet above, the bug's position isn't affected by `translate(mouseX, mouseY)` because that transformation is contained between push() and `pop()`. The bug moves around the entire canvas as expected.
+In the code snippet above, the bug's position isn't affected by `translate(mouseX, mouseY)` because that transformation is contained between [push()](push.md) and `pop()`. The bug moves around the entire canvas as expected.
 
-Note: push() and `pop()` are always called as a pair. Both functions are required to begin and end a drawing group.
+Note: [push()](push.md) and `pop()` are always called as a pair. Both functions are required to begin and end a drawing group.
 
-push() and `pop()` can also be nested to create subgroups. For example, the code snippet above could be changed to give more detail to the frog’s eyes:
+[push()](push.md) and `pop()` can also be nested to create subgroups. For example, the code snippet above could be changed to give more detail to the frog’s eyes:
 
 ```lua
 -- Begin the drawing group.
@@ -98,12 +89,12 @@ In this version, the code to draw each eye is contained between its own push() a
 
 ## Examples
 
-![pop example 1](assets/pop1.webp)
+![push example 1](assets/pop1.webp)
 
 ```lua
 require("L5")
 
-function setup()
+function setup() 
   size(100, 100)
 
   background(200)
@@ -128,12 +119,6 @@ function setup()
   -- End the drawing group.
   pop()
 
-  -- Style the right circle since
-  -- styles aren't encapsulated by push() and pop() in L5
-  strokeWeight(1)
-  stroke('black')
-  fill(255)
-
   -- Draw the right circle.
   circle(75, 50, 20)
 
@@ -143,7 +128,7 @@ function setup()
 end
 ```
 
-![pop example 2](assets/pop2.gif)
+![push example 2](assets/pop2.gif)
 
 ```lua
 require("L5")
@@ -201,13 +186,37 @@ function draw()
 end
 ```
 
+In this version, the code to draw each eye is contained between its own `push` and [pop()](pop.md) functions. Doing so makes it easier to add details in the correct part of a drawing.
+
+[push](push.md) and `pop()` contain the effects of the following functions:
+
+* [fill()](fill.md)
+* [noFill()](noFill.md)
+* [noStroke()](noStroke.md)
+* [stroke()](stroke.md)
+* [tint()](tint.md)
+* [noTint()](noTint.md)
+* [strokeWeight()](strokeWeight.md)
+* [strokeJoin()](strokeJoin.md)
+* [imageMode()](imageMode.md)
+* [rectMode()](rectMode.md)
+* [ellipseMode()](ellipseMode.md)
+* [colorMode()](colorMode.md)
+* [textAlign()](textAlign.md)
+* [textFont()](textFont.md)
+* [textSize()](textSize.md)
+* [applyMatrix()](applyMatrix.md)
+* [resetMatrix()](resetMatrix.md)
+* [rotate()](rotate.md)
+* [scale()](scale.md)
+* [translate()](translate.md)
+
 ## Related
 
 * [push()](push.md)
 * [draw()](draw.md)
 * [isLooping()](isLooping.md)
 * [loop()](loop.md)
-
 
 ---
 

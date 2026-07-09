@@ -1,17 +1,8 @@
 # push()
 
-Begins a drawing group that contains its own transformations.
+Begins a drawing group that contains its own style and transformations.
 
-**Note that L5's push() and pop() work differently than p5.js and Processing. In L5, push() and pop() only save and restore the transformation matrix state but not the style effects.**
-
-`push` and [pop()](pop.md) contain the effects of the following functions:
-
-* translate()
-* rotate()
-* scale()
-* applyMatrix()
-
-By default, transformations such as [rotate()](rotate.md) are applied to all drawing that follows. The `push()` and [pop()](pop.md) functions can limit the effect of transformations to a specific group of shapes, images, and text. For example, a group of shapes could be translated to follow the mouse without affecting the rest of the sketch:
+By default, styles such as [fill()](fill.md) and transformations such as [rotate()](rotate.md) are applied to all drawing that follows. The `push()` and [pop()](pop.md) functions can limit the effect of styles and transformations to a specific group of shapes, images, and text. For example, a group of shapes could be translated to follow the mouse without affecting the rest of the sketch:
 
 ```lua
 -- Begin the drawing group.
@@ -103,7 +94,7 @@ In this version, the code to draw each eye is contained between its own push() a
 ```lua
 require("L5")
 
-function setup()
+function setup() 
   size(100, 100)
 
   background(200)
@@ -127,12 +118,6 @@ function setup()
 
   -- End the drawing group.
   pop()
-
-  -- Style the right circle since
-  -- styles aren't encapsulated by push() and pop() in L5
-  strokeWeight(1)
-  stroke('black')
-  fill(255)
 
   -- Draw the right circle.
   circle(75, 50, 20)
@@ -200,6 +185,31 @@ function draw()
   text('X', x, y)
 end
 ```
+
+In this version, the code to draw each eye is contained between its own `push` and [pop()](pop.md) functions. Doing so makes it easier to add details in the correct part of a drawing.
+
+`push` and [pop()](pop.md) contain the effects of the following functions:
+
+* [fill()](fill.md)
+* [noFill()](noFill.md)
+* [noStroke()](noStroke.md)
+* [stroke()](stroke.md)
+* [tint()](tint.md)
+* [noTint()](noTint.md)
+* [strokeWeight()](strokeWeight.md)
+* [strokeJoin()](strokeJoin.md)
+* [imageMode()](imageMode.md)
+* [rectMode()](rectMode.md)
+* [ellipseMode()](ellipseMode.md)
+* [colorMode()](colorMode.md)
+* [textAlign()](textAlign.md)
+* [textFont()](textFont.md)
+* [textSize()](textSize.md)
+* [applyMatrix()](applyMatrix.md)
+* [resetMatrix()](resetMatrix.md)
+* [rotate()](rotate.md)
+* [scale()](scale.md)
+* [translate()](translate.md)
 
 ## Related
 
