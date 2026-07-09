@@ -18,3 +18,18 @@ Covered by this download tutorial:
 Congratulations! You've now installed Love and have L5 on your computer and verified you can run your own programs. 
 
 Now your computer you are ready to write and [run your L5 programs](running.md).
+
+### Source code
+
+The [L5 repository](https://github.com/L5lua/L5) is accessible for anyone interested in viewing or modifying the L5 source code. See [contributing](/contributing.md) for ways to contribute to the library or this site.
+
+**Latest version of L5.lua:** [Download L5.lua](https://raw.githubusercontent.com/L5lua/L5/main/L5.lua)
+
+## Offline Documentation
+
+This L5 documentation site is available for download to run offline, with or without images.
+
+* [Download L5lua.org with images (12mb zip)](https://github.com/L5lua/L5-website/archive/refs/heads/gh-pages.zip)
+* [Download L5lua.org without images (2mb zip)](https://github.com/L5lua/L5-website/archive/refs/heads/gh-pages-lite.zip)
+
+After downloading, extract the ZIP and serve the folder with a local web server. For a quick local server, navigate to the extracted folder in your command line and run `python -m http.server` (Python 3) or `python -m SimpleHTTPServer` (Python 2).
